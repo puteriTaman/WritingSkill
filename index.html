@@ -61,12 +61,6 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
-        .glass-card-light {
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
         .btn-bounce:hover {
             transform: translateY(-3px) scale(1.02);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
@@ -77,26 +71,18 @@
         }
 
         .drop-zone-active {
-            border-color: #3b82f6 !important;
-            background-color: rgba(59, 130, 246, 0.15) !important;
+            border-color: #f59e0b !important;
+            background-color: rgba(245, 158, 11, 0.15) !important;
         }
 
         .draggable-item {
             cursor: grab;
             user-select: none;
-            touch-action: none;
+            touch-action: manipulation;
         }
 
         .draggable-item:active {
             cursor: grabbing;
-        }
-
-        .map-node {
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .map-node:hover {
-            transform: scale(1.1) translateY(-5px);
         }
 
         /* Custom Scrollbar */
@@ -278,16 +264,19 @@
                     <i class="fa-solid fa-lightbulb text-amber-400 text-xl mt-0.5"></i>
                     <div>
                         <h4 class="font-bold text-indigo-200 text-sm">Stage 1 Objective: Word Treasure Hunt</h4>
-                        <p class="text-xs text-slate-300 mt-1">Drag the descriptive Form 1 vocabulary words on the left and drop them into the matching sentence context on the right!</p>
+                        <p class="text-xs text-slate-300 mt-1">Drag (or tap to select) the vocabulary words on the left and drop them into the matching sentence blank on the right. Tap a placed word anytime to return it to the bank!</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <!-- Word Bank (Source) -->
                     <div class="lg:col-span-4 bg-slate-900/80 border border-slate-700 rounded-2xl p-4 space-y-3">
-                        <h4 class="font-heading font-bold text-amber-400 text-sm flex items-center">
-                            <i class="fa-solid fa-gem mr-2"></i> Word Bank
-                        </h4>
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-heading font-bold text-amber-400 text-sm flex items-center">
+                                <i class="fa-solid fa-gem mr-2"></i> Word Bank
+                            </h4>
+                            <span class="text-[10px] text-slate-400">Tap or drag words</span>
+                        </div>
                         <div id="vocab-words-pool" class="flex flex-wrap lg:flex-col gap-2">
                             <!-- Draggable words injected here -->
                         </div>
@@ -299,7 +288,11 @@
                     </div>
                 </div>
 
-                <div class="flex justify-end pt-2">
+                <div class="flex justify-between items-center pt-2 border-t border-slate-700/60">
+                    <button onclick="app.resetVocabStage()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center space-x-1.5">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Reset Choices</span>
+                    </button>
                     <button onclick="app.checkVocabStage()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-heading font-bold shadow-lg btn-bounce flex items-center space-x-2">
                         <span>Check Vocab Matches</span>
                         <i class="fa-solid fa-check-circle"></i>
@@ -313,7 +306,7 @@
                     <i class="fa-solid fa-puzzle-piece text-amber-400 text-xl mt-0.5"></i>
                     <div>
                         <h4 class="font-bold text-indigo-200 text-sm">Stage 2 Objective: Sentence & Sequence Architect</h4>
-                        <p class="text-xs text-slate-300 mt-1">Arrange the jumbled essay story cards into the correct chronological sequence using paragraph connectors (*First, Next, Suddenly, Finally*).</p>
+                        <p class="text-xs text-slate-300 mt-1">Arrange the jumbled essay story cards into the correct chronological sequence using paragraph connectors (*First, Next, Meanwhile, Finally*).</p>
                     </div>
                 </div>
 
@@ -707,7 +700,7 @@
                 bgGradient: 'from-emerald-700/30 to-teal-900/40',
                 badgeName: 'Island Explorer',
                 vocabList: [
-                    { id: 'v1', word: 'unchartered', meaning: 'Not mapped or officially surveyed', sentence: 'The sailors accidentally discovered an __________ hidden island.' },
+                    { id: 'v1', word: 'uncharted', meaning: 'Not mapped or officially surveyed', sentence: 'The sailors accidentally discovered an __________ hidden island.' },
                     { id: 'v2', word: 'turquoise', meaning: 'A striking light greenish-blue color', sentence: 'The island was surrounded by shimmering __________ ocean waters.' },
                     { id: 'v3', word: 'cavern', meaning: 'A large, mysterious underground cave', sentence: 'Deep inside the jungle, we stumbled upon a mysterious dark __________.' },
                     { id: 'v4', word: 'exotic', meaning: 'Originating in or characteristic of a distant foreign land', sentence: 'We spotted rare, colorful tropical birds with __________ feathers.' }
@@ -721,7 +714,7 @@
                 essayPrompt: {
                     title: 'Hidden Island - Guided Essay Task',
                     instructions: 'Narrate an exciting adventure of exploring an undiscovered hidden island.',
-                    p1Default: 'Last month, while taking a boat ride along the coastline, my friends and I spotted an unchartered hidden island shrouded in light mist. Intrigued by mystery, we decided to explore it.',
+                    p1Default: 'Last month, while taking a boat ride along the coastline, my friends and I spotted an uncharted hidden island shrouded in light mist. Intrigued by mystery, we decided to explore it.',
                     p2Default: 'As our boat anchored on the turquoise shore, we walked onto soft white sand. Trekking into the jungle, we encountered exotic wildlife and uncovered a hidden cavern behind a sparkling waterfall.',
                     p3Default: 'It felt like stepping into an ancient fantasy book. We carefully marked our location on a map before sailing back, promising to keep our secret paradise safe.'
                 }
@@ -765,8 +758,9 @@
             soundEnabled: true,
             records: [], // Stored student records for teacher dashboard
 
-            // Drag and Drop temporary storage
-            currentVocabMatches: {},
+            // Tap & Drag state
+            selectedWordObj: null,
+            currentVocabMatches: {}, // targetId ('v1') => wordId ('v1')
             currentSentenceOrder: [],
 
             init() {
@@ -946,11 +940,12 @@
                 this.currentRealmIndex = index;
                 this.currentStage = 1;
                 this.currentVocabMatches = {};
+                this.selectedWordObj = null;
                 this.navigateTo('game');
                 this.loadStage1();
             },
 
-            // --- STAGE 1: VOCABULARY MATCH (DRAG & DROP) ---
+            // --- STAGE 1: VOCABULARY MATCH (DRAG & DROP / CLICK TO PLACE) ---
             loadStage1() {
                 const realm = GAME_REALMS[this.currentRealmIndex];
                 document.getElementById('game-realm-title').textContent = `${realm.icon} ${realm.title}`;
@@ -964,27 +959,25 @@
                 // Shuffle words for bank
                 const shuffledVocab = [...realm.vocabList].sort(() => Math.random() - 0.5);
 
-                // Word pool
-                const pool = document.getElementById('vocab-words-pool');
-                pool.innerHTML = shuffledVocab.map(v => `
-                    <div id="drag-word-${v.id}" draggable="true" ondragstart="app.handleDragStart(event, '${v.id}', '${v.word}')" 
-                        class="draggable-item bg-amber-500/20 border border-amber-500/50 hover:bg-amber-500/30 text-amber-300 font-bold px-3.5 py-2 rounded-xl text-xs sm:text-sm flex items-center justify-between shadow-sm">
-                        <span><i class="fa-solid fa-grip-vertical mr-2 opacity-60"></i> ${v.word}</span>
-                    </div>
-                `).join('');
+                // Render word pool
+                this.renderVocabPool(shuffledVocab);
 
                 // Target sentences
                 const targets = document.getElementById('vocab-targets-list');
                 targets.innerHTML = realm.vocabList.map((v, i) => `
-                    <div class="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-4 space-y-2">
+                    <div id="target-card-${v.id}" class="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-4 space-y-2 transition-all">
                         <div class="flex justify-between items-center text-xs text-slate-400 font-semibold">
                             <span>Sentence Target #${i + 1}</span>
                             <span class="text-emerald-400"><i class="fa-solid fa-circle-info mr-1"></i> Hint: ${v.meaning}</span>
                         </div>
                         <div class="text-sm text-slate-200 font-medium leading-relaxed">
                             ${v.sentence.replace('__________', `
-                                <span id="drop-target-${v.id}" ondragover="app.handleDragOver(event)" ondragleave="app.handleDragLeave(event)" ondrop="app.handleDrop(event, '${v.id}')"
-                                    class="inline-block min-w-[120px] px-3 py-1 mx-1 border-2 border-dashed border-slate-600 rounded-xl bg-slate-950 text-amber-300 font-bold text-center transition">
+                                <span id="drop-target-${v.id}" 
+                                    ondragover="app.handleDragOver(event)" 
+                                    ondragleave="app.handleDragLeave(event)" 
+                                    ondrop="app.handleDrop(event, '${v.id}')"
+                                    onclick="app.handleTargetClick('${v.id}')"
+                                    class="inline-block cursor-pointer min-w-[130px] px-3 py-1.5 mx-1 border-2 border-dashed border-slate-600 rounded-xl bg-slate-950 text-amber-300 font-bold text-center transition">
                                     [ Drop Word Here ]
                                 </span>
                             `)}
@@ -993,8 +986,59 @@
                 `).join('');
             },
 
+            renderVocabPool(vocabList = GAME_REALMS[this.currentRealmIndex].vocabList) {
+                const pool = document.getElementById('vocab-words-pool');
+                pool.innerHTML = vocabList.map(v => {
+                    const isUsed = Object.values(this.currentVocabMatches).includes(v.id);
+                    const isSelected = this.selectedWordObj && this.selectedWordObj.id === v.id;
+
+                    return `
+                        <div id="drag-word-${v.id}" 
+                            draggable="${!isUsed}" 
+                            ondragstart="app.handleDragStart(event, '${v.id}', '${v.word}')" 
+                            onclick="app.handleWordTap('${v.id}', '${v.word}')"
+                            class="draggable-item font-bold px-3.5 py-2.5 rounded-xl text-xs sm:text-sm flex items-center justify-between shadow-sm transition-all duration-200
+                            ${isUsed ? 'opacity-30 border border-slate-700 bg-slate-800 text-slate-500 cursor-not-allowed pointer-events-none' : 
+                              isSelected ? 'bg-amber-400 text-slate-950 border-2 border-amber-300 ring-4 ring-amber-400/30 font-extrabold scale-105' : 
+                              'bg-amber-500/20 border border-amber-500/50 hover:bg-amber-500/30 text-amber-300 cursor-pointer'}">
+                            <span><i class="fa-solid fa-grip-vertical mr-2 opacity-60"></i> ${v.word}</span>
+                            ${isSelected ? '<i class="fa-solid fa-hand-pointer text-slate-950 animate-bounce"></i>' : ''}
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            handleWordTap(wordId, wordText) {
+                if (this.selectedWordObj && this.selectedWordObj.id === wordId) {
+                    this.selectedWordObj = null; // deselect
+                } else {
+                    this.selectedWordObj = { id: wordId, word: wordText };
+                    sound.playBeep(550, 'sine', 0.05);
+                }
+                this.renderVocabPool();
+            },
+
+            handleTargetClick(targetId) {
+                // If a word is already placed in this target, clicking returns it to pool
+                if (this.currentVocabMatches[targetId]) {
+                    delete this.currentVocabMatches[targetId];
+                    this.selectedWordObj = null;
+                    sound.playBeep(400, 'sine', 0.06);
+                    this.resetTargetVisual(targetId);
+                    this.renderVocabPool();
+                    return;
+                }
+
+                // If user selected a word from pool and tapped blank
+                if (this.selectedWordObj) {
+                    this.placeWordInTarget(targetId, this.selectedWordObj.id, this.selectedWordObj.word);
+                    this.selectedWordObj = null;
+                }
+            },
+
             handleDragStart(e, wordId, wordText) {
                 e.dataTransfer.setData('text/plain', JSON.stringify({ id: wordId, word: wordText }));
+                this.selectedWordObj = { id: wordId, word: wordText };
                 sound.playBeep(450, 'sine', 0.05);
             },
 
@@ -1014,37 +1058,88 @@
 
                 try {
                     const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                    this.currentVocabMatches[targetId] = data.id;
-
-                    target.innerHTML = `<i class="fa-solid fa-check mr-1 text-emerald-400"></i> ${data.word}`;
-                    target.classList.remove('border-dashed', 'border-slate-600');
-                    target.classList.add('border-solid', 'border-amber-400', 'bg-amber-500/10');
-
-                    // Disable original word badge
-                    const dragEl = document.getElementById(`drag-word-${data.id}`);
-                    if (dragEl) dragEl.classList.add('opacity-40', 'pointer-events-none');
-
-                    sound.playBeep(650, 'sine', 0.08);
+                    this.placeWordInTarget(targetId, data.id, data.word);
                 } catch(err) {}
+            },
+
+            placeWordInTarget(targetId, wordId, wordText) {
+                // Assign match
+                this.currentVocabMatches[targetId] = wordId;
+
+                const targetEl = document.getElementById(`drop-target-${targetId}`);
+                if (targetEl) {
+                    targetEl.innerHTML = `<i class="fa-solid fa-cube text-amber-400 mr-1.5 text-xs"></i> ${wordText} <span class="text-[10px] text-slate-400 ml-1">(tap to remove)</span>`;
+                    targetEl.className = "inline-block cursor-pointer min-w-[130px] px-3 py-1.5 mx-1 border-2 border-solid border-amber-400 rounded-xl bg-amber-500/10 text-amber-300 font-bold text-center transition shadow-md";
+                }
+
+                sound.playBeep(650, 'sine', 0.08);
+                this.renderVocabPool();
+            },
+
+            resetTargetVisual(targetId) {
+                const targetEl = document.getElementById(`drop-target-${targetId}`);
+                if (targetEl) {
+                    targetEl.innerHTML = `[ Drop Word Here ]`;
+                    targetEl.className = "inline-block cursor-pointer min-w-[130px] px-3 py-1.5 mx-1 border-2 border-dashed border-slate-600 rounded-xl bg-slate-950 text-amber-300 font-bold text-center transition";
+                }
+                const card = document.getElementById(`target-card-${targetId}`);
+                if (card) {
+                    card.className = "bg-slate-900/90 border border-slate-700/80 rounded-2xl p-4 space-y-2 transition-all";
+                }
+            },
+
+            resetVocabStage() {
+                this.currentVocabMatches = {};
+                this.selectedWordObj = null;
+                const realm = GAME_REALMS[this.currentRealmIndex];
+                realm.vocabList.forEach(v => this.resetTargetVisual(v.id));
+                this.renderVocabPool();
+                sound.playBeep(400, 'sine', 0.08);
             },
 
             checkVocabStage() {
                 const realm = GAME_REALMS[this.currentRealmIndex];
                 let correctCount = 0;
+                let total = realm.vocabList.length;
 
                 realm.vocabList.forEach(v => {
-                    if (this.currentVocabMatches[v.id] === v.id) {
+                    const placedWordId = this.currentVocabMatches[v.id];
+                    const targetEl = document.getElementById(`drop-target-${v.id}`);
+                    const cardEl = document.getElementById(`target-card-${v.id}`);
+
+                    if (placedWordId === v.id) {
                         correctCount++;
+                        // Highlight correct visually with green border and true checkmark
+                        if (targetEl) {
+                            const wordObj = realm.vocabList.find(w => w.id === placedWordId);
+                            targetEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> ${wordObj ? wordObj.word : ''}`;
+                            targetEl.className = "inline-block cursor-pointer min-w-[130px] px-3 py-1.5 mx-1 border-2 border-emerald-500 rounded-xl bg-emerald-500/20 text-emerald-300 font-bold text-center transition";
+                        }
+                        if (cardEl) {
+                            cardEl.className = "bg-emerald-950/20 border border-emerald-500/50 rounded-2xl p-4 space-y-2 transition-all";
+                        }
+                    } else {
+                        // Highlight incorrect visually with red border and crossmark
+                        if (targetEl && placedWordId) {
+                            const wordObj = realm.vocabList.find(w => w.id === placedWordId);
+                            targetEl.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-400 mr-1"></i> ${wordObj ? wordObj.word : ''}`;
+                            targetEl.className = "inline-block cursor-pointer min-w-[130px] px-3 py-1.5 mx-1 border-2 border-rose-500 rounded-xl bg-rose-500/20 text-rose-300 font-bold text-center transition";
+                        }
+                        if (cardEl) {
+                            cardEl.className = "bg-rose-950/20 border border-rose-500/40 rounded-2xl p-4 space-y-2 transition-all";
+                        }
                     }
                 });
 
-                if (correctCount === realm.vocabList.length) {
+                if (correctCount === total) {
                     sound.playSuccess();
                     this.addXP(50);
-                    this.stageNext(2);
+                    setTimeout(() => {
+                        this.stageNext(2);
+                    }, 800);
                 } else {
                     sound.playBeep(250, 'sawtooth', 0.2);
-                    alertModal("Vocabulary Check", `You matched ${correctCount} out of ${realm.vocabList.length} correctly! Review the hints and try again.`);
+                    alertModal("Vocabulary Check", `You got ${correctCount} out of ${total} correct! Incorrect matches are highlighted in red. Tap any red word to return it to the Word Bank and try again.`);
                 }
             },
 
