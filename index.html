@@ -29,12 +29,32 @@
                             gold: '#f59e0b',
                             purple: '#8b5cf6',
                             blue: '#06b6d4',
-                            amber: '#d97706'
+                            amber: '#d97706',
+                            rose: '#f43f5e'
                         }
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
-                        game: ['Comic Sans MS', 'Chalkboard SE', 'sans-serif']
+                        heading: ['Fredoka', 'cursive'],
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'shine': 'shine 2s linear infinite'
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 15px rgba(245, 158, 11, 0.4)' },
+                            '50%': { boxShadow: '0 0 30px rgba(245, 158, 11, 0.8)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-8px)' }
+                        },
+                        shine: {
+                            '0%': { backgroundPosition: '-200% 0' },
+                            '100%': { backgroundPosition: '200% 0' }
+                        }
                     }
                 }
             }
@@ -45,9 +65,10 @@
         
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e293b 100%);
+            background: linear-gradient(135deg, #090d16 0%, #111827 40%, #1e1b4b 100%);
             color: #f8fafc;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .font-heading {
@@ -55,24 +76,33 @@
         }
 
         .glass-card {
-            background: rgba(30, 41, 59, 0.75);
+            background: rgba(30, 41, 59, 0.78);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+        }
+
+        .glass-gold {
+            background: rgba(245, 158, 11, 0.12);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border: 1px solid rgba(245, 158, 11, 0.3);
         }
 
+        .btn-bounce {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
         .btn-bounce:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
         }
-
         .btn-bounce:active {
-            transform: translateY(1px);
+            transform: translateY(1px) scale(0.98);
         }
 
         .drop-zone-active {
             border-color: #f59e0b !important;
-            background-color: rgba(245, 158, 11, 0.15) !important;
+            background-color: rgba(245, 158, 11, 0.2) !important;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
         }
 
         .draggable-item {
@@ -80,9 +110,33 @@
             user-select: none;
             touch-action: manipulation;
         }
-
         .draggable-item:active {
             cursor: grabbing;
+        }
+
+        /* Floating particles overlay */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* XP Floating Animation */
+        @keyframes floatUpFade {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-40px) scale(1.2); }
+        }
+        .xp-pop {
+            position: absolute;
+            animation: floatUpFade 1s forwards ease-out;
+            font-weight: 800;
+            color: #f59e0b;
+            pointer-events: none;
+            z-index: 60;
         }
 
         /* Custom Scrollbar */
@@ -102,149 +156,177 @@
         }
 
         @media print {
-            .no-print {
-                display: none !important;
-            }
-            .print-only {
-                display: block !important;
-            }
-            body {
-                background: white !important;
-                color: black !important;
-            }
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; }
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-amber-500 selection:text-white">
+<body class="min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-white relative">
+
+    <!-- MAGICAL BACKGROUND PARTICLE CANVAS -->
+    <canvas id="particle-canvas"></canvas>
 
     <!-- TOP NAVIGATION BAR -->
     <header class="no-print sticky top-0 z-50 glass-card border-b border-slate-700/60 px-4 py-3">
-        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
+            
             <!-- Brand Logo -->
             <div class="flex items-center space-x-3 cursor-pointer" onclick="app.navigateTo('map')">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-emerald-500 flex items-center justify-center text-white shadow-lg text-xl font-bold">
-                    <i class="fa-solid fa-compass fa-spin-pulse" style="--fa-animation-duration: 12s;"></i>
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 via-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 shadow-lg text-2xl font-bold animate-pulse-glow">
+                    <i class="fa-solid fa-compass fa-spin-pulse" style="--fa-animation-duration: 15s;"></i>
                 </div>
                 <div>
-                    <h1 class="font-heading text-xl font-bold bg-gradient-to-r from-amber-400 via-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                    <h1 class="font-heading text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-amber-400 via-emerald-300 to-cyan-400 bg-clip-text text-transparent tracking-wide">
                         ENGLISH QUEST
                     </h1>
-                    <p class="text-xs text-slate-400 font-medium">Form 1 Essay Writing Adventure</p>
+                    <p class="text-[11px] text-slate-400 font-semibold tracking-wider uppercase">Form 1 KSSM Essay Writing Realm</p>
                 </div>
             </div>
 
-            <!-- Student Profile HUD (Visible when logged in) -->
-            <div id="student-hud" class="hidden flex items-center space-x-4 bg-slate-800/80 px-4 py-1.5 rounded-full border border-slate-700">
+            <!-- Student Profile HUD & XP Bar (Visible when logged in) -->
+            <div id="student-hud" class="hidden flex items-center space-x-3 sm:space-x-4 bg-slate-900/90 px-4 py-1.5 rounded-2xl border border-slate-700 shadow-inner">
                 <div class="flex items-center space-x-2">
-                    <span id="hud-avatar" class="text-2xl">🤠</span>
+                    <span id="hud-avatar" class="text-2xl animate-float">🤠</span>
                     <div>
-                        <div id="hud-name" class="text-sm font-bold text-amber-300">Explorer</div>
-                        <div id="hud-class" class="text-xs text-slate-400">Class: Form 1 Alpha</div>
+                        <div class="flex items-center space-x-1.5">
+                            <span id="hud-name" class="text-sm font-bold text-amber-300">Explorer</span>
+                            <span id="hud-level-badge" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold border border-amber-500/40">Lvl 1</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400" id="hud-title">Novice Word Scout</div>
                     </div>
                 </div>
-                <div class="h-6 w-px bg-slate-700"></div>
-                <div class="flex items-center space-x-3 text-sm font-semibold">
-                    <div class="flex items-center text-amber-400" title="Total Stars">
-                        <i class="fa-solid fa-star mr-1"></i> <span id="hud-stars">0</span>
+
+                <div class="h-7 w-px bg-slate-700"></div>
+
+                <!-- XP Bar -->
+                <div class="hidden md:flex flex-col w-28 space-y-1">
+                    <div class="flex justify-between text-[10px] font-bold text-slate-300">
+                        <span>XP</span>
+                        <span id="hud-xp-text">0 / 200</span>
                     </div>
-                    <div class="flex items-center text-emerald-400" title="Explorer XP">
-                        <i class="fa-solid fa-bolt mr-1"></i> <span id="hud-xp">0</span> XP
+                    <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden p-0.5 border border-slate-700">
+                        <div id="hud-xp-bar" class="h-full rounded-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="h-7 w-px bg-slate-700 hidden md:block"></div>
+
+                <div class="flex items-center space-x-3 text-xs font-bold">
+                    <div class="flex items-center text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20" title="Stars">
+                        <i class="fa-solid fa-star mr-1 text-amber-400 animate-spin" style="--fa-animation-duration: 8s;"></i> 
+                        <span id="hud-stars">0</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Header Controls -->
+            <!-- Header Action Controls -->
             <div class="flex items-center space-x-2">
-                <button onclick="app.toggleSound()" id="sound-btn" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700" title="Toggle Sound">
+                <button onclick="app.toggleSound()" id="sound-btn" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700" title="Toggle Audio FX">
                     <i class="fa-solid fa-volume-high"></i>
                 </button>
+                <button onclick="app.openTrophyCabinet()" class="p-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 transition border border-amber-500/40" title="Trophy Cabinet & Badges">
+                    <i class="fa-solid fa-trophy"></i>
+                </button>
                 <button onclick="app.navigateTo('map')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-semibold transition border border-slate-700 flex items-center">
-                    <i class="fa-solid fa-map mr-1.5 text-amber-400"></i> Map
+                    <i class="fa-solid fa-map-location-dot mr-1.5 text-amber-400"></i> Map
                 </button>
                 <button onclick="app.navigateTo('teacher')" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold transition shadow-md flex items-center">
-                    <i class="fa-solid fa-chalkboard-user mr-1.5"></i> Teacher Dashboard
+                    <i class="fa-solid fa-chalkboard-user mr-1.5"></i> Teacher
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- MAIN CONTAINER -->
-    <main id="main-container" class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col justify-center">
+    <!-- MAIN INTERACTIVE CONTAINER -->
+    <main id="main-container" class="relative z-10 flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col justify-center">
 
-        <!-- VIEW 1: STUDENT LOGIN / AVATAR SELECTION -->
+        <!-- VIEW 1: STUDENT LOGIN & AVATAR SELECTION -->
         <section id="view-login" class="max-w-xl mx-auto w-full">
             <div class="glass-card rounded-3xl p-6 sm:p-8 text-center space-y-6 relative overflow-hidden">
-                <div class="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl"></div>
-                <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
+                <div class="absolute -top-12 -right-12 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl"></div>
 
-                <div class="inline-flex p-4 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-emerald-500/20 border border-amber-500/30 text-amber-400 mb-2">
-                    <i class="fa-solid fa-hat-wizard text-4xl"></i>
+                <div class="inline-flex p-4 rounded-3xl bg-gradient-to-tr from-amber-500/20 via-emerald-500/20 to-cyan-500/20 border border-amber-500/30 text-amber-400 mb-1 animate-float">
+                    <i class="fa-solid fa-hat-wizard text-5xl"></i>
                 </div>
 
-                <h2 class="font-heading text-3xl font-extrabold text-white">Welcome, Young Explorer!</h2>
-                <p class="text-slate-300 text-sm leading-relaxed">
-                    Gear up for an epic English writing expedition! Master vocabulary, construct powerful sentences, and craft winning Form 1 Paper 2 essays across 5 mythical lands.
-                </p>
+                <div>
+                    <h2 class="font-heading text-3xl sm:text-4xl font-extrabold text-white">Welcome, Hero Explorer!</h2>
+                    <p class="text-slate-300 text-xs sm:text-sm mt-2 leading-relaxed max-w-md mx-auto">
+                        Gear up for an action-packed English writing expedition! Conquer vocabulary quests, reconstruct narrative paragraphs, and earn top KSSM PBD grades!
+                    </p>
+                </div>
 
                 <form onsubmit="app.handleLogin(event)" class="space-y-4 text-left">
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Student Full Name</label>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Student Hero Name</label>
                         <div class="relative">
-                            <i class="fa-solid fa-user-pen absolute left-3.5 top-3.5 text-slate-400"></i>
-                            <input type="text" id="login-name" required placeholder="e.g. Adam Harith" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition">
+                            <i class="fa-solid fa-user-ninja absolute left-3.5 top-3.5 text-slate-400"></i>
+                            <input type="text" id="login-name" required placeholder="e.g. Adam Harith" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30 transition">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Class / Section</label>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Class / Form Section</label>
                         <div class="relative">
-                            <i class="fa-solid fa-school absolute left-3.5 top-3.5 text-slate-400"></i>
-                            <input type="text" id="login-class" required placeholder="e.g. Form 1 Cemerlang" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition">
+                            <i class="fa-solid fa-shield-halved absolute left-3.5 top-3.5 text-slate-400"></i>
+                            <input type="text" id="login-class" required placeholder="e.g. Form 1 Cemerlang" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30 transition">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Choose Your Explorer Avatar</label>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Select Your Hero Avatar</label>
                         <div class="grid grid-cols-5 gap-2" id="avatar-selector">
                             <!-- Populated via JS -->
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-emerald-500 to-teal-500 hover:from-amber-400 hover:to-teal-400 text-slate-950 font-heading font-bold text-lg shadow-xl btn-bounce transition flex items-center justify-center space-x-2">
-                        <span>Begin Adventure</span>
-                        <i class="fa-solid fa-arrow-right"></i>
+                    <button type="submit" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-emerald-500 to-teal-500 hover:from-amber-400 hover:to-teal-400 text-slate-950 font-heading font-extrabold text-lg shadow-xl btn-bounce transition flex items-center justify-center space-x-2">
+                        <span>Launch Expedition</span>
+                        <i class="fa-solid fa-dragon text-xl"></i>
                     </button>
                 </form>
             </div>
         </section>
 
-        <!-- VIEW 2: ADVENTURE QUEST MAP (5 REALMS) -->
+        <!-- VIEW 2: ADVENTURE MAP (5 REALMS) -->
         <section id="view-map" class="hidden space-y-6">
             <div class="text-center space-y-2 max-w-2xl mx-auto">
-                <span class="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold uppercase tracking-wider">
-                    Form 1 Essay Writing Realm
+                <span class="px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider">
+                    <i class="fa-solid fa-map-marked-alt mr-1"></i> Form 1 Expedition Map
                 </span>
-                <h2 class="font-heading text-3xl sm:text-4xl font-extrabold text-white">Choose Your Expedition</h2>
-                <p class="text-slate-300 text-sm">Conquer each sub-theme step-by-step: Master Vocab ➔ Rearrange Sentences ➔ Write Complete Essay!</p>
+                <h2 class="font-heading text-3xl sm:text-4xl font-extrabold text-white">Choose Your Quest Zone</h2>
+                <p class="text-slate-300 text-xs sm:text-sm">Master each theme step-by-step: Word Treasure ➔ Sentence Architect ➔ Master Essay!</p>
             </div>
 
             <!-- Realm Cards Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4" id="realms-grid">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2" id="realms-grid">
                 <!-- Realm cards rendered dynamically -->
             </div>
         </section>
 
         <!-- VIEW 3: GAME STAGE CONTAINER -->
         <section id="view-game" class="hidden space-y-6">
-            <!-- Stage Top Progress Header -->
+            <!-- Stage Top Progress Bar Header -->
             <div class="glass-card rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4">
                 <div class="flex items-center space-x-3">
-                    <button onclick="app.navigateTo('map')" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition" title="Back to Map">
+                    <button onclick="app.navigateTo('map')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" title="Back to Map">
                         <i class="fa-solid fa-arrow-left"></i>
                     </button>
                     <div>
                         <div id="game-realm-title" class="font-heading font-bold text-lg text-amber-400">Realm Title</div>
                         <div id="game-stage-subtitle" class="text-xs text-slate-300">Stage 1: Vocabulary Treasure</div>
+                    </div>
+                </div>
+
+                <!-- Combo & Helper Power-Ups -->
+                <div id="game-powerups-hud" class="flex items-center space-x-2">
+                    <button onclick="app.useHintPowerUp()" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold transition flex items-center space-x-1" title="Highlight Hint">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                        <span>Hint Lantern</span>
+                    </button>
+                    <div id="combo-badge" class="hidden px-3 py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-extrabold animate-bounce">
+                        🔥 2x Combo!
                     </div>
                 </div>
 
@@ -261,10 +343,10 @@
             <!-- STAGE 1: VOCABULARY MATCH / DRAG & DROP -->
             <div id="stage-1-container" class="glass-card rounded-3xl p-6 space-y-6">
                 <div class="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 flex items-start space-x-3">
-                    <i class="fa-solid fa-lightbulb text-amber-400 text-xl mt-0.5"></i>
+                    <i class="fa-solid fa-gem text-amber-400 text-xl mt-0.5 animate-bounce"></i>
                     <div>
-                        <h4 class="font-bold text-indigo-200 text-sm">Stage 1 Objective: Word Treasure Hunt</h4>
-                        <p class="text-xs text-slate-300 mt-1">Drag (or tap to select) the vocabulary words on the left and drop them into the matching sentence blank on the right. Tap a placed word anytime to return it to the bank!</p>
+                        <h4 class="font-bold text-indigo-200 text-sm">Stage 1 Objective: Vocabulary Vault</h4>
+                        <p class="text-xs text-slate-300 mt-1">Drag (or tap to select) the vocabulary gems on the left into the correct sentence blank on the right. Tap a placed word anytime to return it to the bank!</p>
                     </div>
                 </div>
 
@@ -273,11 +355,11 @@
                     <div class="lg:col-span-4 bg-slate-900/80 border border-slate-700 rounded-2xl p-4 space-y-3">
                         <div class="flex justify-between items-center">
                             <h4 class="font-heading font-bold text-amber-400 text-sm flex items-center">
-                                <i class="fa-solid fa-gem mr-2"></i> Word Bank
+                                <i class="fa-solid fa-toolbox mr-2"></i> Word Vault
                             </h4>
                             <span class="text-[10px] text-slate-400">Tap or drag words</span>
                         </div>
-                        <div id="vocab-words-pool" class="flex flex-wrap lg:flex-col gap-2">
+                        <div id="vocab-words-pool" class="flex flex-wrap lg:flex-col gap-2.5">
                             <!-- Draggable words injected here -->
                         </div>
                     </div>
@@ -293,9 +375,9 @@
                         <i class="fa-solid fa-rotate-left"></i>
                         <span>Reset Choices</span>
                     </button>
-                    <button onclick="app.checkVocabStage()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-heading font-bold shadow-lg btn-bounce flex items-center space-x-2">
+                    <button onclick="app.checkVocabStage()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-heading font-bold shadow-lg btn-bounce flex items-center space-x-2">
                         <span>Check Vocab Matches</span>
-                        <i class="fa-solid fa-check-circle"></i>
+                        <i class="fa-solid fa-circle-check"></i>
                     </button>
                 </div>
             </div>
@@ -303,22 +385,22 @@
             <!-- STAGE 2: SENTENCE ARCHITECT / REARRANGE -->
             <div id="stage-2-container" class="hidden glass-card rounded-3xl p-6 space-y-6">
                 <div class="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 flex items-start space-x-3">
-                    <i class="fa-solid fa-puzzle-piece text-amber-400 text-xl mt-0.5"></i>
+                    <i class="fa-solid fa-puzzle-piece text-amber-400 text-xl mt-0.5 animate-pulse"></i>
                     <div>
-                        <h4 class="font-bold text-indigo-200 text-sm">Stage 2 Objective: Sentence & Sequence Architect</h4>
-                        <p class="text-xs text-slate-300 mt-1">Arrange the jumbled essay story cards into the correct chronological sequence using paragraph connectors (*First, Next, Meanwhile, Finally*).</p>
+                        <h4 class="font-bold text-indigo-200 text-sm">Stage 2 Objective: Narrative Sequence Architect</h4>
+                        <p class="text-xs text-slate-300 mt-1">Arrange the jumbled essay story blocks into chronological order using sequence linkers (*First, Next, Meanwhile, Finally*).</p>
                     </div>
                 </div>
 
                 <div class="space-y-4" id="sentence-cards-container">
-                    <!-- Rearrangeable sentence blocks injected here -->
+                    <!-- Sentence blocks injected here -->
                 </div>
 
                 <div class="flex justify-between items-center pt-2">
                     <button onclick="app.stageBack(1)" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold">
                         <i class="fa-solid fa-arrow-left mr-1"></i> Back to Vocab
                     </button>
-                    <button onclick="app.checkSentenceStage()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-heading font-bold shadow-lg btn-bounce flex items-center space-x-2">
+                    <button onclick="app.checkSentenceStage()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-heading font-bold shadow-lg btn-bounce flex items-center space-x-2">
                         <span>Verify Paragraph Coherence</span>
                         <i class="fa-solid fa-circle-check"></i>
                     </button>
@@ -328,53 +410,64 @@
             <!-- STAGE 3: MASTER ESSAY COMPOSER -->
             <div id="stage-3-container" class="hidden glass-card rounded-3xl p-6 space-y-6">
                 <div class="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 flex items-start space-x-3">
-                    <i class="fa-solid fa-pen-nib text-amber-400 text-xl mt-0.5"></i>
+                    <i class="fa-solid fa-feather-pointed text-amber-400 text-xl mt-0.5"></i>
                     <div>
                         <h4 class="font-bold text-indigo-200 text-sm">Stage 3 Objective: Craft Your Form 1 Paper 2 Essay</h4>
-                        <p class="text-xs text-slate-300 mt-1">Combine your learned vocabulary and sentence structures! Complete the guided prompt boxes or enhance the text to submit your master essay for automated evaluation.</p>
+                        <p class="text-xs text-slate-300 mt-1">Synthesize your vocabulary and sentence structures! Write or auto-assemble your guided paragraphs to achieve a high KSSM PBD score.</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <!-- Visual Clues & Prompts -->
+                    <!-- Visual Clues & Real-time Live PBD Gauge -->
                     <div class="lg:col-span-5 space-y-4">
                         <div class="bg-slate-900/90 border border-slate-700 rounded-2xl p-4 space-y-3">
-                            <div class="text-3xl font-bold text-center py-4 bg-slate-800 rounded-xl border border-slate-700/50" id="essay-theme-icon">
+                            <div class="text-4xl font-bold text-center py-3 bg-slate-800 rounded-xl border border-slate-700/50" id="essay-theme-icon">
                                 🏔️
                             </div>
                             <h4 class="font-heading font-bold text-amber-300 text-base" id="essay-prompt-title">Mountain Hiking Writing Task</h4>
                             <div class="space-y-2 text-xs text-slate-300 leading-relaxed" id="essay-prompt-instructions">
-                                <!-- Prompt instructions -->
+                                <!-- Instructions -->
+                            </div>
+
+                            <!-- Live KSSM PBD Rating Meter -->
+                            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-2">
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="font-bold text-slate-400 uppercase tracking-wider">Estimated PBD Band:</span>
+                                    <span id="live-pbd-text" class="font-heading font-bold text-amber-400">TP 3 (Developing)</span>
+                                </div>
+                                <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
+                                    <div id="live-pbd-bar" class="h-full bg-gradient-to-r from-amber-500 via-emerald-400 to-cyan-400 transition-all duration-300" style="width: 50%"></div>
+                                </div>
                             </div>
 
                             <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs space-y-1">
-                                <span class="font-bold text-amber-300 block">💡 Helpful Vocab & Connectors Checklist:</span>
+                                <span class="font-bold text-amber-300 block">💡 Required Key Words Checklist:</span>
                                 <div id="essay-checklist-tags" class="flex flex-wrap gap-1.5 pt-1">
-                                    <!-- Dynamic badges -->
+                                    <!-- Badges -->
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Interactive Essay Editor -->
+                    <!-- Interactive Paragraph Writing Canvas -->
                     <div class="lg:col-span-7 space-y-4">
                         <div class="space-y-3">
                             <div>
-                                <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">Paragraph 1: Introduction (Setting & Preparation)</label>
-                                <textarea id="essay-p1" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" placeholder="Introduce when, where, and who went on the adventure..."></textarea>
+                                <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">Paragraph 1: Introduction (Setting & Time)</label>
+                                <textarea id="essay-p1" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30" placeholder="Introduce when, where, and who went..."></textarea>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">Paragraph 2: Main Event & Activities (Sensory Details)</label>
-                                <textarea id="essay-p2" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" placeholder="Describe the journey, actions, sounds, sights, and feelings..."></textarea>
+                                <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">Paragraph 2: Main Events & Sensory Details</label>
+                                <textarea id="essay-p2" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30" placeholder="Describe the journey, actions, sights, and feelings..."></textarea>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">Paragraph 3: Conclusion (Reflection & Feelings)</label>
-                                <textarea id="essay-p3" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" placeholder="Summarise the memorable experience and how you felt..."></textarea>
+                                <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">Paragraph 3: Conclusion & Reflection</label>
+                                <textarea id="essay-p3" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30" placeholder="Summarise your memorable experience..."></textarea>
                             </div>
                         </div>
 
                         <div class="flex justify-between items-center text-xs text-slate-400 pt-1">
-                            <span>Estimated Word Count: <strong id="current-word-count" class="text-amber-400">0</strong> words (Target: 80-120 words)</span>
+                            <span>Word Count: <strong id="current-word-count" class="text-amber-400">0</strong> words (Target: 80-120 words)</span>
                             <button onclick="app.autoFillGuidedEssay()" class="text-xs text-cyan-400 hover:text-cyan-300 underline font-semibold">
                                 <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Auto-Assemble Guided Draft
                             </button>
@@ -397,29 +490,29 @@
         <!-- VIEW 4: TEACHER DASHBOARD & PBD EVIDENCE TRACKER -->
         <section id="view-teacher" class="hidden space-y-6">
             <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-6">
-                <!-- Dashboard Title Header -->
+                <!-- Dashboard Header -->
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-700 pb-4">
                     <div>
                         <span class="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold uppercase tracking-wider">
-                            KSSM Form 1 English Assessment Evidence
+                            KSSM Form 1 English Assessment Dashboard
                         </span>
                         <h2 class="font-heading text-3xl font-bold text-white mt-1">Teacher Command Center & Analytics</h2>
-                        <p class="text-slate-300 text-xs sm:text-sm">Track student scores, vocabulary mastery, submitted essays, and export Pentaksiran Bilik Darjah (PBD) evidence records.</p>
+                        <p class="text-slate-300 text-xs sm:text-sm">Track student scores, vocabulary accuracy, essay submissions, and print Pentaksiran Bilik Darjah (PBD) records.</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <button onclick="app.seedMockData()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-semibold border border-slate-700">
+                        <button onclick="app.seedMockData()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-semibold border border-slate-700">
                             <i class="fa-solid fa-database mr-1 text-cyan-400"></i> Add Sample Records
                         </button>
                         <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-md">
-                            <i class="fa-solid fa-print mr-1.5"></i> Print Evidence Report
+                            <i class="fa-solid fa-print mr-1.5"></i> Print PBD Report
                         </button>
                     </div>
                 </div>
 
-                <!-- Stats Overview Badges -->
+                <!-- Summary Badges -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div class="bg-slate-900/80 border border-slate-700/80 p-4 rounded-2xl">
-                        <div class="text-xs text-slate-400 uppercase font-bold">Total Students Logged</div>
+                        <div class="text-xs text-slate-400 uppercase font-bold">Total Students</div>
                         <div class="text-2xl font-heading font-extrabold text-amber-400 mt-1" id="stat-total-students">0</div>
                     </div>
                     <div class="bg-slate-900/80 border border-slate-700/80 p-4 rounded-2xl">
@@ -427,20 +520,20 @@
                         <div class="text-2xl font-heading font-extrabold text-emerald-400 mt-1" id="stat-total-essays">0</div>
                     </div>
                     <div class="bg-slate-900/80 border border-slate-700/80 p-4 rounded-2xl">
-                        <div class="text-xs text-slate-400 uppercase font-bold">Avg Vocab Accuracy</div>
+                        <div class="text-xs text-slate-400 uppercase font-bold">Avg Vocab Score</div>
                         <div class="text-2xl font-heading font-extrabold text-cyan-400 mt-1" id="stat-avg-vocab">0%</div>
                     </div>
                     <div class="bg-slate-900/80 border border-slate-700/80 p-4 rounded-2xl">
-                        <div class="text-xs text-slate-400 uppercase font-bold">PBD Mastery Band</div>
-                        <div class="text-2xl font-heading font-extrabold text-indigo-400 mt-1" id="stat-pbd-band">TP 4 - TP 5</div>
+                        <div class="text-xs text-slate-400 uppercase font-bold">PBD Benchmark</div>
+                        <div class="text-2xl font-heading font-extrabold text-indigo-400 mt-1">TP 4 - TP 5</div>
                     </div>
                 </div>
 
-                <!-- Student Records Table -->
+                <!-- Table -->
                 <div class="space-y-3">
                     <div class="flex justify-between items-center">
-                        <h3 class="font-heading font-bold text-lg text-amber-300">Student Achievement Log</h3>
-                        <span class="text-xs text-slate-400">Click on any record to view detailed essay submission</span>
+                        <h3 class="font-heading font-bold text-lg text-amber-300">Student PBD Achievement Log</h3>
+                        <span class="text-xs text-slate-400">Click inspect to view submitted text</span>
                     </div>
 
                     <div class="overflow-x-auto rounded-2xl border border-slate-700">
@@ -450,14 +543,14 @@
                                     <th class="p-3.5">Student Name</th>
                                     <th class="p-3.5">Class</th>
                                     <th class="p-3.5">Realm Theme</th>
-                                    <th class="p-3.5 text-center">Vocab & Sent. Score</th>
-                                    <th class="p-3.5 text-center">Essay Word Count</th>
+                                    <th class="p-3.5 text-center">Vocab Accuracy</th>
+                                    <th class="p-3.5 text-center">Word Count</th>
                                     <th class="p-3.5 text-center">PBD Band</th>
                                     <th class="p-3.5 text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="teacher-records-table-body" class="divide-y divide-slate-800 text-sm text-slate-200">
-                                <!-- Records populated via JS -->
+                                <!-- JS Populated -->
                             </tbody>
                         </table>
                     </div>
@@ -467,44 +560,44 @@
 
     </main>
 
-    <!-- MODAL: ESSAY EVALUATION RESULT / BADGE REWARD -->
+    <!-- MODAL: VICTORY & EVALUATION RESULT -->
     <div id="modal-result" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-card max-w-lg w-full rounded-3xl p-6 sm:p-8 space-y-6 text-center border border-amber-500/40 relative">
+        <div class="glass-card max-w-lg w-full rounded-3xl p-6 sm:p-8 space-y-6 text-center border border-amber-500/40 relative overflow-hidden">
             <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-amber-400 to-emerald-400 flex items-center justify-center text-slate-950 text-4xl font-bold shadow-xl animate-bounce">
                 <i class="fa-solid fa-trophy"></i>
             </div>
 
             <div>
-                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold uppercase tracking-wider border border-emerald-500/30">
-                    Expedition Completed!
+                <span class="px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold uppercase tracking-wider border border-emerald-500/30">
+                    Expedition Complete!
                 </span>
-                <h3 class="font-heading text-2xl font-bold text-white mt-2" id="modal-title">Outstanding Essay!</h3>
-                <p class="text-xs text-slate-300 mt-1" id="modal-subtitle">You have earned the Explorer Writing Badge!</p>
+                <h3 class="font-heading text-2xl sm:text-3xl font-bold text-white mt-2" id="modal-title">Outstanding Work!</h3>
+                <p class="text-xs text-slate-300 mt-1" id="modal-subtitle">You earned 150 XP & 3 Explorer Stars!</p>
             </div>
 
-            <!-- Score Breakdown Grid -->
+            <!-- Score Cards -->
             <div class="grid grid-cols-3 gap-3 bg-slate-900/90 rounded-2xl p-4 border border-slate-800">
                 <div>
-                    <div class="text-xs text-slate-400 font-bold">Vocabulary</div>
-                    <div class="text-lg font-heading font-bold text-amber-400" id="score-vocab">100%</div>
+                    <div class="text-xs text-slate-400 font-bold">Vocab Score</div>
+                    <div class="text-xl font-heading font-bold text-amber-400" id="score-vocab">100%</div>
                 </div>
                 <div>
                     <div class="text-xs text-slate-400 font-bold">Coherence</div>
-                    <div class="text-lg font-heading font-bold text-emerald-400" id="score-coherence">100%</div>
+                    <div class="text-xl font-heading font-bold text-emerald-400" id="score-coherence">100%</div>
                 </div>
                 <div>
                     <div class="text-xs text-slate-400 font-bold">Word Count</div>
-                    <div class="text-lg font-heading font-bold text-cyan-400" id="score-words">110 w</div>
+                    <div class="text-xl font-heading font-bold text-cyan-400" id="score-words">110 w</div>
                 </div>
             </div>
 
-            <!-- Detailed Feedback Box -->
+            <!-- Evaluation Box -->
             <div class="bg-indigo-950/50 border border-indigo-500/30 rounded-2xl p-4 text-left text-xs space-y-2">
                 <div class="font-bold text-indigo-300 flex items-center">
-                    <i class="fa-solid fa-comment-dots mr-1.5"></i> Teacher Evaluation Feedback:
+                    <i class="fa-solid fa-award mr-1.5 text-amber-400"></i> Teacher KSSM Assessment Feedback:
                 </div>
                 <p id="modal-feedback-text" class="text-slate-300 leading-relaxed">
-                    Great use of sensory words like 'breathtaking' and transition linkers like 'Meanwhile'!
+                    Great use of descriptive vocabulary and sequence linkers!
                 </p>
             </div>
 
@@ -519,13 +612,43 @@
         </div>
     </div>
 
-    <!-- MODAL: ESSAY DETAIL INSPECTOR (TEACHER VIEW) -->
+    <!-- MODAL: TROPHY CABINET & BADGES -->
+    <div id="modal-trophy" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-2xl w-full rounded-3xl p-6 space-y-5 border border-amber-500/40 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-xl font-bold">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-bold text-xl text-white">Explorer Trophy Cabinet</h3>
+                        <p class="text-xs text-slate-400">Your unlocked realm badges & achievements</p>
+                    </div>
+                </div>
+                <button onclick="app.closeTrophyModal()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="trophy-list-grid">
+                <!-- Injected JS Badges -->
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="app.closeTrophyModal()" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-heading font-bold text-xs">
+                    Close Cabinet
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ESSAY INSPECTOR (TEACHER VIEW) -->
     <div id="modal-essay-inspector" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="glass-card max-w-2xl w-full rounded-3xl p-6 space-y-5 border border-slate-700 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                 <div>
                     <h3 class="font-heading font-bold text-xl text-amber-300" id="inspect-student-name">Student Essay Inspection</h3>
-                    <p class="text-xs text-slate-400" id="inspect-student-meta">Class: Form 1 | Realm: Hiking a Mountain</p>
+                    <p class="text-xs text-slate-400" id="inspect-student-meta">Class: Form 1 | Realm: Mountain Hiking</p>
                 </div>
                 <button onclick="app.closeInspectorModal()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
                     <i class="fa-solid fa-xmark text-lg"></i>
@@ -540,7 +663,7 @@
             </div>
 
             <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 space-y-2">
-                <h4 class="font-bold text-xs uppercase text-amber-400 tracking-wider">Pentaksiran Bilik Darjah (PBD) Rating:</h4>
+                <h4 class="font-bold text-xs uppercase text-amber-400 tracking-wider">Pentaksiran Bilik Darjah (PBD) Assessment:</h4>
                 <p id="inspect-pbd-text" class="text-xs text-slate-300 leading-relaxed"></p>
             </div>
 
@@ -557,11 +680,67 @@
 
     <!-- FOOTER -->
     <footer class="no-print glass-card border-t border-slate-800 py-3 text-center text-xs text-slate-400 mt-8">
-        <p>🎮 English Quest: Form 1 Essay Master &bull; Interactive KSSM CEFR A2/B1 Educational Writing Adventure</p>
+        <p>🎮 English Quest: Form 1 KSSM Essay Writing Realm &bull; Interactive Educational Writing Game</p>
     </footer>
 
     <script>
-        // --- SOUND EFFECTS SYNTHESIZER (Web Audio API) ---
+        // --- ANIMATED CANVAS PARTICLES ENGINE ---
+        (function initParticleCanvas() {
+            const canvas = document.getElementById('particle-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 2.5 + 0.5;
+                    this.speedY = -(Math.random() * 0.5 + 0.2);
+                    this.speedX = (Math.random() - 0.5) * 0.3;
+                    this.opacity = Math.random() * 0.5 + 0.2;
+                    this.color = Math.random() > 0.5 ? '#f59e0b' : '#10b981';
+                }
+                update() {
+                    this.y += this.speedY;
+                    this.x += this.speedX;
+                    if (this.y < 0) this.reset();
+                }
+                draw() {
+                    ctx.fillStyle = this.color;
+                    ctx.globalAlpha = this.opacity;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < 45; i++) {
+                particles.push(new Particle());
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
+
+        // --- WEB AUDIO SYNTHESIZER ---
         class SoundEngine {
             constructor() {
                 this.ctx = null;
@@ -582,7 +761,7 @@
                     const gain = this.ctx.createGain();
                     osc.type = type;
                     osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
                     osc.connect(gain);
                     gain.connect(this.ctx.destination);
@@ -591,38 +770,44 @@
                 } catch(e) {}
             }
 
+            playCoin() {
+                if (!this.enabled) return;
+                this.playBeep(987.77, 'sine', 0.08); // B5
+                setTimeout(() => this.playBeep(1318.51, 'sine', 0.15), 60); // E6
+            }
+
             playSuccess() {
                 if (!this.enabled) return;
-                this.playBeep(523.25, 'triangle', 0.12); // C5
-                setTimeout(() => this.playBeep(659.25, 'triangle', 0.12), 100); // E5
-                setTimeout(() => this.playBeep(783.99, 'triangle', 0.25), 200); // G5
+                this.playBeep(523.25, 'triangle', 0.12);
+                setTimeout(() => this.playBeep(659.25, 'triangle', 0.12), 90);
+                setTimeout(() => this.playBeep(783.99, 'triangle', 0.25), 180);
             }
 
             playFanfare() {
                 if (!this.enabled) return;
                 const notes = [523.25, 659.25, 783.99, 1046.50];
                 notes.forEach((n, i) => {
-                    setTimeout(() => this.playBeep(n, 'square', 0.2), i * 120);
+                    setTimeout(() => this.playBeep(n, 'square', 0.18), i * 110);
                 });
             }
         }
 
         const sound = new SoundEngine();
 
-        // --- SUB-THEMES & CURRICULUM DATA (5 ADVENTURE REALMS) ---
+        // --- SUB-THEMES & CURRICULUM DATA (5 REALMS) ---
         const GAME_REALMS = [
             {
                 id: 'mountain',
                 title: 'Mount Peak Ascent',
                 themeName: 'Hiking a Mountain',
                 icon: '🏔️',
-                bgGradient: 'from-amber-600/30 to-emerald-900/40',
                 badgeName: 'Summit Mountaineer',
+                badgeDesc: 'Conquered mountain vocabulary & narrative writing!',
                 vocabList: [
-                    { id: 'v1', word: 'breathtaking', meaning: 'Extremely beautiful or astonishing view', sentence: 'When we reached the top, we enjoyed a __________ sunrise view.' },
-                    { id: 'v2', word: 'trudged', meaning: 'Walked slowly with heavy steps due to exhaustion', sentence: 'We __________ up the steep, winding mountain trail for hours.' },
+                    { id: 'v1', word: 'breathtaking', meaning: 'Extremely beautiful view', sentence: 'When we reached the top, we enjoyed a __________ sunrise view.' },
+                    { id: 'v2', word: 'trudged', meaning: 'Walked slowly with heavy steps', sentence: 'We __________ up the steep, winding mountain trail for hours.' },
                     { id: 'v3', word: 'lush greenery', meaning: 'Dense, fresh green plants and trees', sentence: 'The forest was filled with __________ and chirping birds.' },
-                    { id: 'v4', word: 'conquered', meaning: 'Successfully overcome or climbed to the top', sentence: 'Feeling proud, our group finally __________ the summit.' }
+                    { id: 'v4', word: 'conquered', meaning: 'Successfully climbed to the top', sentence: 'Feeling proud, our group finally __________ the summit.' }
                 ],
                 sentenceStage: [
                     { id: 's1', text: 'Early on Saturday morning, my friends and I gathered at the foot of Mount Broga.', order: 1, linker: 'First' },
@@ -631,10 +816,10 @@
                     { id: 's4', text: 'After three challenging hours, we reached the summit and cheered with triumph.', order: 4, linker: 'Finally' }
                 ],
                 essayPrompt: {
-                    title: 'Hiking Mount Peak - Guided Essay Task',
-                    instructions: 'Write a 3-paragraph essay about your mountain hiking experience. Introduce your group, describe the climb using vivid adjectives, and conclude with your feelings.',
+                    title: 'Hiking Mount Peak - KSSM Guided Essay Task',
+                    instructions: 'Write a 3-paragraph narrative essay about your mountain hiking experience. Introduce your group, describe the climb using vivid adjectives, and conclude with your feelings.',
                     p1Default: 'Last Saturday morning, my classmates and I decided to go on an exciting hiking trip to Mount Peak. We arrived at the base of the mountain early at 6.30 a.m. with our backpacks packed with water and snacks.',
-                    p2Default: 'As we began our ascent, we trudged up the steep and winding trail. The surroundings were filled with lush greenery and cool morning breeze. Halfway through, we paused to take photos of the breathtaking landscape.',
+                    p2Default: 'As we began our ascent, we trudged up the steep and winding trail. The surroundings were filled with lush greenery and a cool morning breeze. Halfway through, we paused to take photos of the breathtaking landscape.',
                     p3Default: 'Finally, we conquered the summit after two tiring hours. Looking at the majestic view below made all our hard work worthwhile. It was truly an unforgettable adventure.'
                 }
             },
@@ -643,8 +828,8 @@
                 title: 'Sunny Breeze Cove',
                 themeName: 'Picnic at the Beach',
                 icon: '🏖️',
-                bgGradient: 'from-cyan-600/30 to-blue-900/40',
                 badgeName: 'Coastal Navigator',
+                badgeDesc: 'Mastered beach picnic descriptive vocabulary!',
                 vocabList: [
                     { id: 'v1', word: 'shimmering', meaning: 'Shining with a soft, sparkling light', sentence: 'The sunlight danced on the __________ blue ocean waves.' },
                     { id: 'v2', word: 'mouth-watering', meaning: 'Delicious and appetizing food', sentence: 'My mother prepared a basket of __________ tuna sandwiches.' },
@@ -658,7 +843,7 @@
                     { id: 's4', text: 'We packed our belongings in the evening, feeling tired yet immensely happy.', order: 4, linker: 'Finally' }
                 ],
                 essayPrompt: {
-                    title: 'Beach Picnic - Guided Essay Task',
+                    title: 'Beach Picnic - KSSM Guided Essay Task',
                     instructions: 'Describe a memorable picnic day at the seaside with family or friends.',
                     p1Default: 'During the last weekend, my family organized a picnic trip to Sunny Breeze Cove. The sky was clear blue, and the weather was perfect for an outdoor beach outing.',
                     p2Default: 'When we arrived, we laid a picnic mat under a shady tree. We unpacked mouth-watering sandwiches and fruit juice. Afterwards, we built sandcastles and happily splashed in the shimmering waves.',
@@ -670,11 +855,11 @@
                 title: 'Wild Safari Sanctuary',
                 themeName: 'Visiting a Zoo',
                 icon: '🦁',
-                bgGradient: 'from-amber-700/30 to-yellow-900/40',
                 badgeName: 'Safari Ranger',
+                badgeDesc: 'Unlocked zoo and wildlife conservation terms!',
                 vocabList: [
                     { id: 'v1', word: 'majestic', meaning: 'Having impressive beauty or dignity', sentence: 'We stood in awe as the __________ male lion let out a powerful roar.' },
-                    { id: 'v2', word: 'mischievous', meaning: 'Playful in a playful or cheeky way', sentence: 'The __________ monkeys swung effortlessly between tree branches.' },
+                    { id: 'v2', word: 'mischievous', meaning: 'Playful in a cheeky way', sentence: 'The __________ monkeys swung effortlessly between tree branches.' },
                     { id: 'v3', word: 'enclosures', meaning: 'Spacious areas surrounded by fences for animals', sentence: 'The animals lived safely inside natural, clean __________.' },
                     { id: 'v4', word: 'conservation', meaning: 'Protection and preservation of wildlife', sentence: 'We learned about wildlife __________ during the educational tour.' }
                 ],
@@ -685,7 +870,7 @@
                     { id: 's4', text: 'We took a group photograph at the entrance gate before boarding our school bus.', order: 4, linker: 'Finally' }
                 ],
                 essayPrompt: {
-                    title: 'Zoo Excursion - Guided Essay Task',
+                    title: 'Zoo Excursion - KSSM Guided Essay Task',
                     instructions: 'Write an account of your visit to the zoo, highlighting exotic animals and lessons learned.',
                     p1Default: 'During the recent school holidays, my school arranged an educational visit to Zoo Negara. Forty Form 1 students and three teachers participated in this fun trip.',
                     p2Default: 'At the sanctuary, we toured various enclosures housing exotic animals. We were mesmerized by the majestic lions and amused by the mischievous monkeys swinging from ropes. We also attended an insightful animal feeding show.',
@@ -697,13 +882,13 @@
                 title: 'The Lost Hidden Island',
                 themeName: 'Hidden Island',
                 icon: '🏝️',
-                bgGradient: 'from-emerald-700/30 to-teal-900/40',
                 badgeName: 'Island Explorer',
+                badgeDesc: 'Mastered mystery & island adventure narrative skills!',
                 vocabList: [
                     { id: 'v1', word: 'uncharted', meaning: 'Not mapped or officially surveyed', sentence: 'The sailors accidentally discovered an __________ hidden island.' },
                     { id: 'v2', word: 'turquoise', meaning: 'A striking light greenish-blue color', sentence: 'The island was surrounded by shimmering __________ ocean waters.' },
                     { id: 'v3', word: 'cavern', meaning: 'A large, mysterious underground cave', sentence: 'Deep inside the jungle, we stumbled upon a mysterious dark __________.' },
-                    { id: 'v4', word: 'exotic', meaning: 'Originating in or characteristic of a distant foreign land', sentence: 'We spotted rare, colorful tropical birds with __________ feathers.' }
+                    { id: 'v4', word: 'exotic', meaning: 'Originating in or characteristic of distant foreign lands', sentence: 'We spotted rare, colorful tropical birds with __________ feathers.' }
                 ],
                 sentenceStage: [
                     { id: 's1', text: 'While sailing along the coastal waters, our boat drifted towards a hidden tropical island.', order: 1, linker: 'First' },
@@ -712,7 +897,7 @@
                     { id: 's4', text: 'Realizing night was falling, we navigated back to our boat safely with secret stories.', order: 4, linker: 'Finally' }
                 ],
                 essayPrompt: {
-                    title: 'Hidden Island - Guided Essay Task',
+                    title: 'Hidden Island - KSSM Guided Essay Task',
                     instructions: 'Narrate an exciting adventure of exploring an undiscovered hidden island.',
                     p1Default: 'Last month, while taking a boat ride along the coastline, my friends and I spotted an uncharted hidden island shrouded in light mist. Intrigued by mystery, we decided to explore it.',
                     p2Default: 'As our boat anchored on the turquoise shore, we walked onto soft white sand. Trekking into the jungle, we encountered exotic wildlife and uncovered a hidden cavern behind a sparkling waterfall.',
@@ -724,8 +909,8 @@
                 title: 'Starlight Forest Camp',
                 themeName: 'Camping',
                 icon: '⛺',
-                bgGradient: 'from-purple-800/30 to-slate-900/40',
                 badgeName: 'Wilderness Scout',
+                badgeDesc: 'Conquered camping survival and campfire vocabulary!',
                 vocabList: [
                     { id: 'v1', word: 'pitched', meaning: 'Set up and erected a tent securely', sentence: 'Together with our troop, we __________ our tents on flat ground.' },
                     { id: 'v2', word: 'crackling', meaning: 'Making rapid sharp snapping noises', sentence: 'We sat around the __________ campfire to warm ourselves.' },
@@ -739,7 +924,7 @@
                     { id: 's4', text: 'We broke camp early the next morning, leaving behind no litter.', order: 4, linker: 'Finally' }
                 ],
                 essayPrompt: {
-                    title: 'Forest Camping - Guided Essay Task',
+                    title: 'Forest Camping - KSSM Guided Essay Task',
                     instructions: 'Write about a scout camping trip, teamwork, pitching tents, and campfire activities.',
                     p1Default: 'Last Friday, our school Scout unit organized a 3-day camping trip in the lush interior of Ulu Yam forest. We traveled by bus, full of enthusiasm.',
                     p2Default: 'Upon arrival, we cooperated to pitch tents and build a campfire site. In the evening, we sat around the crackling campfire, roasting marshmallows, telling mystery stories, and enjoying the starlit sky.',
@@ -750,17 +935,26 @@
 
         const AVATARS = ['🤠', '🧗‍♂️', '🏄‍♀️', '🧭', '🦁', '⛺', '🏹', '🎒', '🌴', '🌟'];
 
+        const LEVEL_TITLES = [
+            { minXP: 0, level: 1, title: 'Novice Word Scout' },
+            { minXP: 100, level: 2, title: 'Sentence Apprentice' },
+            { minXP: 250, level: 3, title: 'Narrative Pathfinder' },
+            { minXP: 450, level: 4, title: 'Essay Conqueror' },
+            { minXP: 700, level: 5, title: 'Mythic Wordsmith' }
+        ];
+
         // --- GAME APPLICATION STATE ---
         const app = {
-            currentUser: null, // { name, class, avatar, stars: 0, xp: 0, completedRealms: [] }
+            currentUser: null,
             currentRealmIndex: 0,
-            currentStage: 1, // 1, 2, or 3
+            currentStage: 1,
             soundEnabled: true,
-            records: [], // Stored student records for teacher dashboard
+            records: [],
+            comboCount: 0,
 
-            // Tap & Drag state
+            // Stage state
             selectedWordObj: null,
-            currentVocabMatches: {}, // targetId ('v1') => wordId ('v1')
+            currentVocabMatches: {},
             currentSentenceOrder: [],
 
             init() {
@@ -768,8 +962,7 @@
                 this.renderAvatars();
                 this.renderRealmsMap();
                 this.updateHUD();
-                
-                // Set default view
+
                 if (this.currentUser) {
                     this.navigateTo('map');
                 } else {
@@ -799,14 +992,13 @@
                 this.soundEnabled = !this.soundEnabled;
                 sound.enabled = this.soundEnabled;
                 const btn = document.getElementById('sound-btn');
-                btn.innerHTML = this.soundEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark text-red-400"></i>';
+                btn.innerHTML = this.soundEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark text-rose-400"></i>';
                 sound.playBeep(600, 'sine', 0.05);
             },
 
             navigateTo(viewId) {
-                sound.playBeep(400, 'sine', 0.05);
-                const views = ['login', 'map', 'game', 'teacher'];
-                views.forEach(v => {
+                sound.playBeep(450, 'sine', 0.05);
+                ['login', 'map', 'game', 'teacher'].forEach(v => {
                     const el = document.getElementById(`view-${v}`);
                     if (el) el.classList.add('hidden');
                 });
@@ -814,11 +1006,8 @@
                 const target = document.getElementById(`view-${viewId}`);
                 if (target) target.classList.remove('hidden');
 
-                if (viewId === 'teacher') {
-                    this.renderTeacherDashboard();
-                } else if (viewId === 'map') {
-                    this.renderRealmsMap();
-                }
+                if (viewId === 'teacher') this.renderTeacherDashboard();
+                else if (viewId === 'map') this.renderRealmsMap();
             },
 
             renderAvatars() {
@@ -826,7 +1015,7 @@
                 if (!container) return;
                 container.innerHTML = AVATARS.map((av, idx) => `
                     <button type="button" onclick="app.selectAvatar('${av}', this)" 
-                        class="avatar-option p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-2xl text-center transition ${idx === 0 ? 'ring-2 ring-amber-400 bg-amber-500/20' : ''}">
+                        class="avatar-option p-3 rounded-2xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-2xl text-center transition ${idx === 0 ? 'ring-2 ring-amber-400 bg-amber-500/20' : ''}">
                         ${av}
                     </button>
                 `).join('');
@@ -834,7 +1023,7 @@
             },
 
             selectAvatar(av, btnEl) {
-                sound.playBeep(500, 'sine', 0.05);
+                sound.playBeep(520, 'sine', 0.05);
                 this.selectedAvatar = av;
                 document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('ring-2', 'ring-amber-400', 'bg-amber-500/20'));
                 if (btnEl) btnEl.classList.add('ring-2', 'ring-amber-400', 'bg-amber-500/20');
@@ -867,14 +1056,33 @@
                     return;
                 }
                 hud.classList.remove('hidden');
+
+                const xp = this.currentUser.xp || 0;
+                let currentLvlObj = LEVEL_TITLES[0];
+                let nextLvlXP = 200;
+
+                for (let i = 0; i < LEVEL_TITLES.length; i++) {
+                    if (xp >= LEVEL_TITLES[i].minXP) {
+                        currentLvlObj = LEVEL_TITLES[i];
+                        nextLvlXP = LEVEL_TITLES[i+1] ? LEVEL_TITLES[i+1].minXP : LEVEL_TITLES[i].minXP + 300;
+                    }
+                }
+
                 document.getElementById('hud-avatar').textContent = this.currentUser.avatar;
                 document.getElementById('hud-name').textContent = this.currentUser.name;
-                document.getElementById('hud-class').textContent = this.currentUser.class;
-                document.getElementById('hud-stars').textContent = this.currentUser.stars;
-                document.getElementById('hud-xp').textContent = this.currentUser.xp;
+                document.getElementById('hud-level-badge').textContent = `Lvl ${currentLvlObj.level}`;
+                document.getElementById('hud-title').textContent = currentLvlObj.title;
+                document.getElementById('hud-stars').textContent = this.currentUser.stars || 0;
+
+                const xpText = document.getElementById('hud-xp-text');
+                const xpBar = document.getElementById('hud-xp-bar');
+                if (xpText && xpBar) {
+                    xpText.textContent = `${xp} / ${nextLvlXP}`;
+                    const pct = Math.min(100, Math.round((xp / nextLvlXP) * 100));
+                    xpBar.style.width = `${pct}%`;
+                }
             },
 
-            // --- REALM SELECTION & MAP ---
             renderRealmsMap() {
                 const grid = document.getElementById('realms-grid');
                 if (!grid) return;
@@ -941,34 +1149,31 @@
                 this.currentStage = 1;
                 this.currentVocabMatches = {};
                 this.selectedWordObj = null;
+                this.comboCount = 0;
                 this.navigateTo('game');
                 this.loadStage1();
             },
 
-            // --- STAGE 1: VOCABULARY MATCH (DRAG & DROP / CLICK TO PLACE) ---
+            // --- STAGE 1: VOCABULARY VAULT ---
             loadStage1() {
                 const realm = GAME_REALMS[this.currentRealmIndex];
                 document.getElementById('game-realm-title').textContent = `${realm.icon} ${realm.title}`;
-                document.getElementById('game-stage-subtitle').textContent = `Stage 1: Vocabulary Match (${realm.themeName})`;
+                document.getElementById('game-stage-subtitle').textContent = `Stage 1: Vocabulary Vault (${realm.themeName})`;
                 this.updateStageStepDots(1);
 
                 document.getElementById('stage-1-container').classList.remove('hidden');
                 document.getElementById('stage-2-container').classList.add('hidden');
                 document.getElementById('stage-3-container').classList.add('hidden');
 
-                // Shuffle words for bank
                 const shuffledVocab = [...realm.vocabList].sort(() => Math.random() - 0.5);
-
-                // Render word pool
                 this.renderVocabPool(shuffledVocab);
 
-                // Target sentences
                 const targets = document.getElementById('vocab-targets-list');
                 targets.innerHTML = realm.vocabList.map((v, i) => `
                     <div id="target-card-${v.id}" class="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-4 space-y-2 transition-all">
                         <div class="flex justify-between items-center text-xs text-slate-400 font-semibold">
-                            <span>Sentence Target #${i + 1}</span>
-                            <span class="text-emerald-400"><i class="fa-solid fa-circle-info mr-1"></i> Hint: ${v.meaning}</span>
+                            <span>Target #${i + 1}</span>
+                            <span class="text-emerald-400"><i class="fa-solid fa-lightbulb mr-1"></i> Hint: ${v.meaning}</span>
                         </div>
                         <div class="text-sm text-slate-200 font-medium leading-relaxed">
                             ${v.sentence.replace('__________', `
@@ -977,7 +1182,7 @@
                                     ondragleave="app.handleDragLeave(event)" 
                                     ondrop="app.handleDrop(event, '${v.id}')"
                                     onclick="app.handleTargetClick('${v.id}')"
-                                    class="inline-block cursor-pointer min-w-[130px] px-3 py-1.5 mx-1 border-2 border-dashed border-slate-600 rounded-xl bg-slate-950 text-amber-300 font-bold text-center transition">
+                                    class="inline-block cursor-pointer min-w-[130px] px-3.5 py-1.5 mx-1 border-2 border-dashed border-slate-600 rounded-xl bg-slate-950 text-amber-300 font-bold text-center transition">
                                     [ Drop Word Here ]
                                 </span>
                             `)}
@@ -1001,7 +1206,7 @@
                             ${isUsed ? 'opacity-30 border border-slate-700 bg-slate-800 text-slate-500 cursor-not-allowed pointer-events-none' : 
                               isSelected ? 'bg-amber-400 text-slate-950 border-2 border-amber-300 ring-4 ring-amber-400/30 font-extrabold scale-105' : 
                               'bg-amber-500/20 border border-amber-500/50 hover:bg-amber-500/30 text-amber-300 cursor-pointer'}">
-                            <span><i class="fa-solid fa-grip-vertical mr-2 opacity-60"></i> ${v.word}</span>
+                            <span><i class="fa-solid fa-gem mr-2 text-amber-400"></i> ${v.word}</span>
                             ${isSelected ? '<i class="fa-solid fa-hand-pointer text-slate-950 animate-bounce"></i>' : ''}
                         </div>
                     `;
@@ -1010,7 +1215,7 @@
 
             handleWordTap(wordId, wordText) {
                 if (this.selectedWordObj && this.selectedWordObj.id === wordId) {
-                    this.selectedWordObj = null; // deselect
+                    this.selectedWordObj = null;
                 } else {
                     this.selectedWordObj = { id: wordId, word: wordText };
                     sound.playBeep(550, 'sine', 0.05);
@@ -1019,7 +1224,6 @@
             },
 
             handleTargetClick(targetId) {
-                // If a word is already placed in this target, clicking returns it to pool
                 if (this.currentVocabMatches[targetId]) {
                     delete this.currentVocabMatches[targetId];
                     this.selectedWordObj = null;
@@ -1029,7 +1233,6 @@
                     return;
                 }
 
-                // If user selected a word from pool and tapped blank
                 if (this.selectedWordObj) {
                     this.placeWordInTarget(targetId, this.selectedWordObj.id, this.selectedWordObj.word);
                     this.selectedWordObj = null;
@@ -1053,9 +1256,7 @@
 
             handleDrop(e, targetId) {
                 e.preventDefault();
-                const target = e.currentTarget;
-                target.classList.remove('drop-zone-active');
-
+                e.currentTarget.classList.remove('drop-zone-active');
                 try {
                     const data = JSON.parse(e.dataTransfer.getData('text/plain'));
                     this.placeWordInTarget(targetId, data.id, data.word);
@@ -1063,16 +1264,15 @@
             },
 
             placeWordInTarget(targetId, wordId, wordText) {
-                // Assign match
                 this.currentVocabMatches[targetId] = wordId;
 
                 const targetEl = document.getElementById(`drop-target-${targetId}`);
                 if (targetEl) {
-                    targetEl.innerHTML = `<i class="fa-solid fa-cube text-amber-400 mr-1.5 text-xs"></i> ${wordText} <span class="text-[10px] text-slate-400 ml-1">(tap to remove)</span>`;
-                    targetEl.className = "inline-block cursor-pointer min-w-[130px] px-3 py-1.5 mx-1 border-2 border-solid border-amber-400 rounded-xl bg-amber-500/10 text-amber-300 font-bold text-center transition shadow-md";
+                    targetEl.innerHTML = `<i class="fa-solid fa-cube text-amber-400 mr-1.5 text-xs"></i> ${wordText} <span class="text-[10px] text-slate-400 ml-1">(tap to return)</span>`;
+                    targetEl.className = "inline-block cursor-pointer min-w-[130px] px-3.5 py-1.5 mx-1 border-2 border-solid border-amber-400 rounded-xl bg-amber-500/10 text-amber-300 font-bold text-center transition shadow-md";
                 }
 
-                sound.playBeep(650, 'sine', 0.08);
+                sound.playCoin();
                 this.renderVocabPool();
             },
 
@@ -1080,11 +1280,24 @@
                 const targetEl = document.getElementById(`drop-target-${targetId}`);
                 if (targetEl) {
                     targetEl.innerHTML = `[ Drop Word Here ]`;
-                    targetEl.className = "inline-block cursor-pointer min-w-[130px] px-3 py-1.5 mx-1 border-2 border-dashed border-slate-600 rounded-xl bg-slate-950 text-amber-300 font-bold text-center transition";
+                    targetEl.className = "inline-block cursor-pointer min-w-[130px] px-3.5 py-1.5 mx-1 border-2 border-dashed border-slate-600 rounded-xl bg-slate-950 text-amber-300 font-bold text-center transition";
                 }
                 const card = document.getElementById(`target-card-${targetId}`);
                 if (card) {
                     card.className = "bg-slate-900/90 border border-slate-700/80 rounded-2xl p-4 space-y-2 transition-all";
+                }
+            },
+
+            useHintPowerUp() {
+                sound.playCoin();
+                const realm = GAME_REALMS[this.currentRealmIndex];
+                const unplaced = realm.vocabList.find(v => !this.currentVocabMatches[v.id]);
+                if (unplaced) {
+                    const cardEl = document.getElementById(`target-card-${unplaced.id}`);
+                    if (cardEl) {
+                        cardEl.classList.add('ring-2', 'ring-amber-400', 'bg-amber-500/20');
+                        setTimeout(() => cardEl.classList.remove('ring-2', 'ring-amber-400', 'bg-amber-500/20'), 2500);
+                    }
                 }
             },
 
@@ -1109,21 +1322,18 @@
 
                     if (placedWordId === v.id) {
                         correctCount++;
-                        // Highlight correct visually with green border and true checkmark
                         if (targetEl) {
-                            const wordObj = realm.vocabList.find(w => w.id === placedWordId);
-                            targetEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> ${wordObj ? wordObj.word : ''}`;
-                            targetEl.className = "inline-block cursor-pointer min-w-[130px] px-3 py-1.5 mx-1 border-2 border-emerald-500 rounded-xl bg-emerald-500/20 text-emerald-300 font-bold text-center transition";
+                            targetEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> ${v.word}`;
+                            targetEl.className = "inline-block cursor-pointer min-w-[130px] px-3.5 py-1.5 mx-1 border-2 border-emerald-500 rounded-xl bg-emerald-500/20 text-emerald-300 font-bold text-center transition";
                         }
                         if (cardEl) {
                             cardEl.className = "bg-emerald-950/20 border border-emerald-500/50 rounded-2xl p-4 space-y-2 transition-all";
                         }
                     } else {
-                        // Highlight incorrect visually with red border and crossmark
                         if (targetEl && placedWordId) {
                             const wordObj = realm.vocabList.find(w => w.id === placedWordId);
                             targetEl.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-400 mr-1"></i> ${wordObj ? wordObj.word : ''}`;
-                            targetEl.className = "inline-block cursor-pointer min-w-[130px] px-3 py-1.5 mx-1 border-2 border-rose-500 rounded-xl bg-rose-500/20 text-rose-300 font-bold text-center transition";
+                            targetEl.className = "inline-block cursor-pointer min-w-[130px] px-3.5 py-1.5 mx-1 border-2 border-rose-500 rounded-xl bg-rose-500/20 text-rose-300 font-bold text-center transition";
                         }
                         if (cardEl) {
                             cardEl.className = "bg-rose-950/20 border border-rose-500/40 rounded-2xl p-4 space-y-2 transition-all";
@@ -1133,17 +1343,15 @@
 
                 if (correctCount === total) {
                     sound.playSuccess();
-                    this.addXP(50);
-                    setTimeout(() => {
-                        this.stageNext(2);
-                    }, 800);
+                    this.addXP(60);
+                    setTimeout(() => this.stageNext(2), 800);
                 } else {
                     sound.playBeep(250, 'sawtooth', 0.2);
-                    alertModal("Vocabulary Check", `You got ${correctCount} out of ${total} correct! Incorrect matches are highlighted in red. Tap any red word to return it to the Word Bank and try again.`);
+                    alertModal("Vocabulary Vault Check", `You got ${correctCount} out of ${total} correct! Red highlights indicate incorrect placement. Tap any red word to return it to the Word Vault.`);
                 }
             },
 
-            // --- STAGE 2: SENTENCE ARCHITECT (REARRANGE) ---
+            // --- STAGE 2: SENTENCE ARCHITECT ---
             loadStage2() {
                 const realm = GAME_REALMS[this.currentRealmIndex];
                 document.getElementById('game-stage-subtitle').textContent = `Stage 2: Sentence & Paragraph Architect (${realm.themeName})`;
@@ -1153,9 +1361,7 @@
                 document.getElementById('stage-2-container').classList.remove('hidden');
                 document.getElementById('stage-3-container').classList.add('hidden');
 
-                // Shuffle sentence order for challenge
                 this.currentSentenceOrder = [...realm.sentenceStage].sort(() => Math.random() - 0.5);
-
                 this.renderSentenceList();
             },
 
@@ -1210,11 +1416,11 @@
 
                 if (isCorrect) {
                     sound.playSuccess();
-                    this.addXP(75);
+                    this.addXP(80);
                     this.stageNext(3);
                 } else {
                     sound.playBeep(250, 'sawtooth', 0.2);
-                    alertModal("Paragraph Sequence Check", "The story order isn't quite coherent yet! Remember: Introduction comes first, followed by sequential events, and conclusion last.");
+                    alertModal("Sequence Check", "The story order isn't quite coherent yet! Make sure the introductory sentence comes first, followed by sequence connectors (Next, Then, Meanwhile, Finally).");
                 }
             },
 
@@ -1232,7 +1438,6 @@
                 document.getElementById('essay-prompt-title').textContent = realm.essayPrompt.title;
                 document.getElementById('essay-prompt-instructions').textContent = realm.essayPrompt.instructions;
 
-                // Tags checklist
                 const tags = document.getElementById('essay-checklist-tags');
                 const wordsList = realm.vocabList.map(v => v.word).concat(['First', 'Meanwhile', 'Finally', 'Consequently']);
                 tags.innerHTML = wordsList.map(w => `
@@ -1241,7 +1446,6 @@
                     </span>
                 `).join('');
 
-                // Input listeners for word count
                 ['essay-p1', 'essay-p2', 'essay-p3'].forEach(id => {
                     document.getElementById(id).addEventListener('input', () => this.updateWordCount());
                 });
@@ -1267,13 +1471,21 @@
                 const count = fullText ? fullText.split(/\s+/).length : 0;
 
                 const countEl = document.getElementById('current-word-count');
-                if (countEl) {
-                    countEl.textContent = count;
-                    if (count >= 80 && count <= 150) {
-                        countEl.className = 'text-emerald-400 font-bold';
-                    } else {
-                        countEl.className = 'text-amber-400 font-bold';
-                    }
+                if (countEl) countEl.textContent = count;
+
+                // Live PBD Gauge update
+                const pbdText = document.getElementById('live-pbd-text');
+                const pbdBar = document.getElementById('live-pbd-bar');
+
+                if (count >= 80) {
+                    if (pbdText) { pbdText.textContent = "TP 5 - TP 6 (Exemplary)"; pbdText.className = "font-heading font-bold text-emerald-400"; }
+                    if (pbdBar) pbdBar.style.width = "100%";
+                } else if (count >= 50) {
+                    if (pbdText) { pbdText.textContent = "TP 4 (Satisfactory)"; pbdText.className = "font-heading font-bold text-amber-400"; }
+                    if (pbdBar) pbdBar.style.width = "70%";
+                } else {
+                    if (pbdText) { pbdText.textContent = "TP 3 (Developing)"; pbdText.className = "font-heading font-bold text-cyan-400"; }
+                    if (pbdBar) pbdBar.style.width = "40%";
                 }
             },
 
@@ -1284,16 +1496,14 @@
 
                 if (!p1 || !p2 || !p3) {
                     sound.playBeep(250, 'sawtooth', 0.2);
-                    alertModal("Incomplete Essay", "Please write all three paragraphs (Introduction, Main Activities, Conclusion) before submitting!");
+                    alertModal("Incomplete Essay", "Please complete all three paragraphs (Introduction, Main Events, Conclusion) before submitting!");
                     return;
                 }
 
                 const fullText = `${p1}\n\n${p2}\n\n${p3}`;
                 const wordCount = fullText.split(/\s+/).length;
-
                 const realm = GAME_REALMS[this.currentRealmIndex];
 
-                // Scoring calculations
                 let vocabHits = 0;
                 realm.vocabList.forEach(v => {
                     if (fullText.toLowerCase().includes(v.word.toLowerCase())) vocabHits++;
@@ -1302,15 +1512,13 @@
                 const vocabScore = Math.min(100, Math.round((vocabHits / realm.vocabList.length) * 100));
                 const coherenceScore = wordCount >= 75 ? 95 : 70;
 
-                // PBD Band evaluation
                 let pbdBand = 'TP 3';
                 if (vocabScore >= 75 && wordCount >= 80) pbdBand = 'TP 5 (Exemplary)';
                 else if (vocabScore >= 50) pbdBand = 'TP 4 (Satisfactory)';
 
-                // Record saving
                 const record = {
                     id: Date.now(),
-                    studentName: this.currentUser ? this.currentUser.name : 'Explorer Student',
+                    studentName: this.currentUser ? this.currentUser.name : 'Hero Explorer',
                     studentClass: this.currentUser ? this.currentUser.class : 'Form 1',
                     avatar: this.currentUser ? this.currentUser.avatar : '🤠',
                     realmTitle: realm.title,
@@ -1327,26 +1535,24 @@
                 if (this.currentUser) {
                     if (!this.currentUser.completedRealms.includes(realm.id)) {
                         this.currentUser.completedRealms.push(realm.id);
-                        this.currentUser.stars += 3;
+                        this.currentUser.stars = (this.currentUser.stars || 0) + 3;
                     }
                     this.addXP(150);
                 }
 
                 this.saveToStorage();
-
-                // Fire victory sound and confetti
                 sound.playFanfare();
+
                 try {
-                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                    confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
                 } catch(e) {}
 
-                // Show evaluation modal
-                document.getElementById('modal-title').textContent = `Awesome Work, ${record.studentName}!`;
+                document.getElementById('modal-title').textContent = `Victory, ${record.studentName}!`;
                 document.getElementById('score-vocab').textContent = `${vocabScore}%`;
                 document.getElementById('score-coherence').textContent = `${coherenceScore}%`;
                 document.getElementById('score-words').textContent = `${wordCount} w`;
                 document.getElementById('modal-feedback-text').textContent = `
-                    Excellent job applying Form 1 English Paper 2 writing conventions! Your essay demonstrates clear paragraphing, rich descriptive vocabulary, and logical sequencing. Assigned KSSM PBD Rating: ${pbdBand}.
+                    Superb execution of Form 1 KSSM CEFR A2/B1 writing standards! Your essay features clear chronological sequence and descriptive vocabulary. Assigned Assessment Rating: ${pbdBand}.
                 `;
 
                 document.getElementById('modal-result').classList.remove('hidden');
@@ -1380,7 +1586,7 @@
 
             addXP(amount) {
                 if (!this.currentUser) return;
-                this.currentUser.xp += amount;
+                this.currentUser.xp = (this.currentUser.xp || 0) + amount;
                 this.updateHUD();
                 this.saveToStorage();
             },
@@ -1389,7 +1595,38 @@
                 document.getElementById('modal-result').classList.add('hidden');
             },
 
-            // --- TEACHER DASHBOARD & PBD EVIDENCE ---
+            // --- TROPHY CABINET MODAL ---
+            openTrophyCabinet() {
+                sound.playBeep(520, 'sine', 0.05);
+                const grid = document.getElementById('trophy-list-grid');
+                if (!grid) return;
+
+                grid.innerHTML = GAME_REALMS.map(realm => {
+                    const isUnlocked = this.currentUser && this.currentUser.completedRealms.includes(realm.id);
+                    return `
+                        <div class="p-4 rounded-2xl border ${isUnlocked ? 'bg-amber-500/10 border-amber-500/40 text-white' : 'bg-slate-900/60 border-slate-800 text-slate-500'} flex items-center space-x-3">
+                            <div class="text-3xl p-3 rounded-2xl ${isUnlocked ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-bounce' : 'bg-slate-800 text-slate-600'}">
+                                ${realm.icon}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-sm ${isUnlocked ? 'text-amber-300' : 'text-slate-400'}">${realm.badgeName}</h4>
+                                <p class="text-[11px] mt-0.5 leading-relaxed ${isUnlocked ? 'text-slate-300' : 'text-slate-500'}">${realm.badgeDesc}</p>
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider mt-1 inline-block ${isUnlocked ? 'text-emerald-400' : 'text-slate-600'}">
+                                    ${isUnlocked ? '✓ Unlocked' : '🔒 Locked'}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('modal-trophy').classList.remove('hidden');
+            },
+
+            closeTrophyModal() {
+                document.getElementById('modal-trophy').classList.add('hidden');
+            },
+
+            // --- TEACHER DASHBOARD ---
             renderTeacherDashboard() {
                 document.getElementById('stat-total-students').textContent = new Set(this.records.map(r => r.studentName)).size;
                 document.getElementById('stat-total-essays').textContent = this.records.length;
@@ -1447,7 +1684,7 @@
                         avatar: '🧗‍♂️',
                         realmTitle: 'Mount Peak Ascent',
                         realmTheme: 'Hiking a Mountain',
-                        essayText: 'Last Saturday, my family and I went hiking up Mount Peak. We arrived early in the morning equipped with sturdy backpacks.\n\nDuring the climb, we trudged up the winding trail surrounded by lush greenery. The fresh air was extremely refreshing.\n\nFinally, we reached the summit and enjoyed a breathtaking panoramic sunrise view.',
+                        essayText: 'Last Saturday, my family and I went hiking up Mount Peak. We arrived early in the morning equipped with sturdy backpacks.\n\nDuring the climb, we trudged up the winding trail surrounded by lush greenery. The fresh air was extremely refreshing.\n\nFinally, we conquered the summit and enjoyed a breathtaking panoramic sunrise view.',
                         wordCount: 88,
                         vocabScore: '100%',
                         pbdBand: 'TP 5 (Exemplary)',
@@ -1478,7 +1715,7 @@
                 document.getElementById('inspect-student-name').textContent = `${r.avatar || ''} ${r.studentName}`;
                 document.getElementById('inspect-student-meta').textContent = `Class: ${r.studentClass} | Sub-Theme: ${r.realmTheme} | Date: ${r.timestamp}`;
                 document.getElementById('inspect-essay-text').textContent = r.essayText;
-                document.getElementById('inspect-pbd-text').textContent = `Assigned Band: ${r.pbdBand} (Word Count: ${r.wordCount} words, Vocab Accuracy: ${r.vocabScore}). Meets Form 1 KSSM CEFR A2/B1 Writing Descriptors for English Paper 2.`;
+                document.getElementById('inspect-pbd-text').textContent = `Assigned Band: ${r.pbdBand} (Word Count: ${r.wordCount} words, Vocab Accuracy: ${r.vocabScore}). Meets KSSM Form 1 CEFR A2/B1 English Writing Standards.`;
 
                 document.getElementById('modal-essay-inspector').classList.remove('hidden');
             },
@@ -1488,7 +1725,6 @@
             }
         };
 
-        // Utility alert modal without using browser alert()
         function alertModal(title, text) {
             const el = document.createElement('div');
             el.className = "fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4";
@@ -1505,7 +1741,6 @@
             document.body.appendChild(el);
         }
 
-        // Initialize App on Window Load
         window.onload = function() {
             app.init();
         };
